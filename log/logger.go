@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -95,13 +96,13 @@ func Panicf(ctx context.Context, format string, v ...interface{}) {
 }
 
 // Error logs a message with Error level using the default logger
-func Error(ctx context.Context, v ...interface{}) {
-	instance.error(ctx, v...)
+func Error(ctx context.Context, v ...interface{}) error {
+	return instance.error(ctx, v...)
 }
 
 // Errorf logs a formatted message with Panic level using the default logger
-func Errorf(ctx context.Context, format string, v ...interface{}) {
-	instance.errorf(ctx, format, v...)
+func Errorf(ctx context.Context, format string, v ...interface{}) error {
+	return instance.errorf(ctx, format, v...)
 }
 
 // Info logs a message with Info level using the default logger
@@ -163,16 +164,20 @@ func (logger *logger) panicf(ctx context.Context, format string, v ...interface{
 	panic(fmt.Sprint(v...))
 }
 
-func (logger *logger) error(ctx context.Context, v ...interface{}) {
+func (logger *logger) error(ctx context.Context, v ...interface{}) error {
+	err := errors.New(fmt.Sprintln(v...))
 	if ERROR <= logger.maxLevel(ctx) {
-		logger.output(ctx, ERROR, fmt.Sprintln(v...))
+		logger.output(ctx, ERROR, err.Error())
 	}
+	return err
 }
 
-func (logger *logger) errorf(ctx context.Context, format string, v ...interface{}) {
+func (logger *logger) errorf(ctx context.Context, format string, v ...interface{}) error {
+	err := errors.New(fmt.Sprintf(format, v...))
 	if ERROR <= logger.maxLevel(ctx) {
-		logger.output(ctx, ERROR, fmt.Sprintf(format, v...))
+		logger.output(ctx, ERROR, err.Error())
 	}
+	return err
 }
 
 func (logger *logger) info(ctx context.Context, v ...interface{}) {
